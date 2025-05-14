@@ -21,7 +21,7 @@ class SpeciesInfo:
         if parent is not None:
             self.reps[0] = parent.id
         self.reps[1] = me.id
-        self.coor = None
+        self.coords = None
 
     # if you are prominent, all your ancestors become prominent.
     def become_prominent(self):

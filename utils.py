@@ -214,7 +214,7 @@ def get_distance(x1, y1, x2, y2):
     return np.linalg.norm(np.array([x2 - x1, y2 - y1]))
 
 
-def arrayIntMultiply(arr, factor):
+def array_int_multiply(arr, factor):
     result = [None] * len(arr)
     for i in range(len(arr)):
         result[i] = int(arr[i] * factor)

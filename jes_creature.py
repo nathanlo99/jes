@@ -13,7 +13,7 @@ class Creature:
         self.dna = dna
         self.calm_state = None
         self.icons = [None] * 2
-        self.icon_coor = None
+        self.icon_coords = None
         self.id = id_number
         self.fitness = None
         self.rank = None

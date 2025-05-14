@@ -7,10 +7,10 @@ import pygame
 from utils import lerp, species_to_color, species_to_name
 
 
-def draw_text_rect(surface, transform, coor, color1, color2, text, font):
+def draw_text_rect(surface, transform, coords, color1, color2, text, font):
     tx, ty, s = transform
-    x1, y1, x2, y2 = coor
-    draw_rect(surface, transform, coor, color1)
+    x1, y1, x2, y2 = coords
+    draw_rect(surface, transform, coords, color1)
     center_x = (x1 + x2) / 2
     center_y = (y1 + y2) / 2
     text_x = center_x * s + tx
@@ -18,13 +18,13 @@ def draw_text_rect(surface, transform, coor, color1, color2, text, font):
     center_text(surface, text, text_x, text_y, color2, font)
 
 
-def draw_rect(surface, transform, coor, color):
+def draw_rect(surface, transform, coords, color):
     surface_width = surface.get_width()
     surface_height = surface.get_height()
-    if coor is None:
+    if coords is None:
         x1 = y1 = x2 = y2 = None
     else:
-        x1, y1, x2, y2 = coor
+        x1, y1, x2, y2 = coords
     tx, ty, s = transform
     ax1 = 0 if x1 is None else tx + x1 * s
     ay1 = 0 if y1 is None else ty + y1 * s
@@ -66,37 +66,37 @@ def right_text(screen, stri, x, y, color, font):
     align_text(screen, stri, x, y, color, font, 1.0, None)
 
 
-def expand(coor, amount):
+def expand(coords, amount):
     return [
-        coor[0] - amount,
-        coor[1] - amount,
-        coor[2] + amount * 2,
-        coor[3] + amount * 2,
+        coords[0] - amount,
+        coords[1] - amount,
+        coords[2] + amount * 2,
+        coords[3] + amount * 2,
     ]
 
 
 def align_text(screen, stri, x, y, color, font, align, bg_color):
     text_surface = font.render(stri, False, color)
-    coor = (x - text_surface.get_width() * align, y - text_surface.get_height() / 2)
+    coords = (x - text_surface.get_width() * align, y - text_surface.get_height() / 2)
     if bg_color is not None:
-        coor = (
-            coor[0] - 4,
-            coor[1],
+        coords = (
+            coords[0] - 4,
+            coords[1],
             text_surface.get_width() + 8,
             text_surface.get_height(),
         )
         if bg_color[1] is not None:
-            pygame.draw.rect(screen, bg_color[1], expand(coor, 2))
-        pygame.draw.rect(screen, bg_color[0], coor)
-    screen.blit(text_surface, coor)
+            pygame.draw.rect(screen, bg_color[1], expand(coords, 2))
+        pygame.draw.rect(screen, bg_color[0], coords)
+    screen.blit(text_surface, coords)
 
 
-def draw_clock(surface, coor, ratio, text, font):
+def draw_clock(surface, coords, ratio, text, font):
     white = (255, 255, 255)
     grayish = (115, 125, 160)
     black = (0, 0, 0)
 
-    x, y, r = coor
+    x, y, r = coords
     num_arcs = 30
     for p in range(num_arcs):
         ratio1 = p / num_arcs
@@ -144,14 +144,14 @@ def draw_arrow(screen, _start, _end, margin, head, color):
 
 
 def draw_species_circle(
-    screen, s, coor, radius, sim, species_info, font, should_draw_arrow, ui
+    screen, s, coords, radius, sim, species_info, font, should_draw_arrow, ui
 ):
     color = species_to_color(s, ui)
     name = species_to_name(s, ui)
     info = species_info[s]
-    cx, cy = coor
+    cx, cy = coords
 
-    pygame.draw.circle(screen, color, coor, radius)
+    pygame.draw.circle(screen, color, coords, radius)
     center_text(screen, name, cx, cy - 22, (0, 0, 0), font)
 
     creature = sim.get_create_with_id(info.reps[2])
@@ -165,8 +165,8 @@ def draw_species_circle(
         else:
             draw_arrow(
                 screen,
-                species_info[ancestor_id].coor,
-                info.coor,
+                species_info[ancestor_id].coords,
+                info.coords,
                 radius,
                 radius / 2,
                 color,

@@ -179,7 +179,7 @@ def draw_gene_graph(species_info, prominent_species, gene_graph, sim, ui, font):
             s = prominent_species[level][i]
             x = (i + 0.5) / (len(prominent_species[level])) * w + r
             y = (level) / (len(prominent_species) - 0.8) * h + r
-            species_info[s].coor = (x, y)
+            species_info[s].coords = (x, y)
 
     for level in range(len(prominent_species)):
         for i in range(len(prominent_species[level])):
@@ -187,7 +187,7 @@ def draw_gene_graph(species_info, prominent_species, gene_graph, sim, ui, font):
             draw_species_circle(
                 gene_graph,
                 s,
-                species_info[s].coor,
+                species_info[s].coords,
                 r,
                 sim,
                 species_info,
@@ -281,8 +281,8 @@ def blit_gene_graph_and_marks(screen, sim, ui):
         if not info.prominent:
             continue
         circle_count = 2 if sp == top_species else 1
-        cx = info.coor[0] + ui.geneology_coords[0]
-        cy = info.coor[1] + ui.geneology_coords[1]
+        cx = info.coords[0] + ui.geneology_coords[0]
+        cy = info.coords[1] + ui.geneology_coords[1]
         for c in range(circle_count):
             pygame.draw.circle(screen, ui.white, (cx, cy), radius + 3 + 6 * c, 3)
 

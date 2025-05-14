@@ -169,7 +169,7 @@ class Simulation:
 
             if not calming_run:
                 beat = self.frame_to_beat(current_frame)
-                # decrease y-velo (3rd node coor) by G
+                # decrease y-velo (3rd node coords) by G
                 node_coords[:, :, :, 3] += self.gravity_acceleration_coef
 
             applyMuscles(node_coords, muscles[:, :, :, beat, :], self.muscle_coef)
