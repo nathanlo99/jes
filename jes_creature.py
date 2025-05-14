@@ -50,7 +50,7 @@ class Creature:
         # signs
         font = self.ui.big_font if transform[2] >= 50 else self.ui.small_font
         for meters in range(0, 3000, 100):
-            u = meters * self.sim.UNITS_PER_METER
+            u = meters * self.sim.units_per_meter
             draw_rect(surface, transform, [u - 0.2, -6, u + 0.2, 0], sign_color)
             draw_text_rect(
                 surface,
@@ -83,6 +83,7 @@ class Creature:
                 self.draw_cell(cell_surface, node_state, frame, transform, x, y)
         surface.blit(cell_surface, (0, 0))
 
+        ratio = 1.0
         if draw_labels:
             tx, _, s = transform
             avg_x = np.mean(node_state[:, :, 0], axis=(0, 1))
@@ -99,7 +100,7 @@ class Creature:
             )
             center_text(
                 surface,
-                f"{dist_to_text(avg_x, True, self.sim.UNITS_PER_METER)}",
+                f"{dist_to_text(avg_x, True, self.sim.units_per_meter)}",
                 lx,
                 ly + 18,
                 self.ui.white,
@@ -108,12 +109,11 @@ class Creature:
 
             ratio = 1 - frame / self.sim.trial_time
         if should_draw_clock:
-            assert draw_labels
             draw_clock(
                 surface,
                 [40, 40, 32],
                 ratio,
-                str(math.ceil(ratio * self.sim.trial_time / self.ui.FPS)),
+                str(math.ceil(ratio * self.sim.trial_time / self.ui.fps)),
                 self.ui.small_font,
             )
 

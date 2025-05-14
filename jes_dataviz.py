@@ -10,9 +10,9 @@ from jes_shapes import right_text, align_text, draw_species_circle
 
 def draw_all_graphs(sim, ui):
     draw_line_graph(
-        sim.percentiles, ui.graph, [70, 0, 30, 30], sim.UNITS_PER_METER, ui.small_font
+        sim.percentiles, ui.graph, [70, 0, 30, 30], sim.units_per_meter, ui.small_font
     )
-    draw_sac(sim.species_pops, ui.sac, [70, 0], ui)
+    draw_labels(sim.species_pops, ui.labels, [70, 0], ui)
     draw_gene_graph(
         sim.species_info, sim.prominent_species, ui.gene_graph, sim, ui, ui.tiny_font
     )
@@ -93,37 +93,45 @@ def draw_line_graph(data, graph, margins, u, font):
             pygame.draw.line(graph, color, (x1, y1), (x2, y2), width=thickness)
 
 
-# TODO: ???
-def draw_sac(data, sac, margins, ui):
-    sac.fill((0, 0, 0))
+def draw_labels(data, labels, margins, ui):
+    labels.fill((0, 0, 0))
     for g in range(len(data)):
-        scan_down_trapezoids(data, g, sac, margins, ui)
+        scan_down_trapezoids(data, g, labels, margins, ui)
 
 
-def scan_down_trapezoids(data, g, sac, margins, ui):
-    w = sac.get_width() - margins[0] - margins[1]
-    h = sac.get_height()
+def scan_down_trapezoids(data, generation_idx, labels, margins, ui):
+    width = labels.get_width() - margins[0] - margins[1]
+    height = labels.get_height()
     num_generations = len(data)
     left = margins[0]
-    x1 = left + (g / num_generations) * w
-    x2 = left + ((g + 1) / num_generations) * w
-    keys = sorted(list(data[g].keys()))
-    c_count = data[g][keys[-1]][2]  # ending index of the last entry
-    # TODO ???
-    fac = h / c_count
+    x1 = left + (generation_idx / num_generations) * width
+    x2 = left + ((generation_idx + 1) / num_generations) * width
+    keys = sorted(list(data[generation_idx].keys()))
+    creature_count = data[generation_idx][keys[-1]][2]  # ending index of the last entry
+    height_per_creature = height / creature_count
 
-    if g == 0:
-        for sp in data[g].keys():
-            pop = data[g][sp]
+    if generation_idx == 0:
+        for sp in data[generation_idx].keys():
+            pop = data[generation_idx][sp]
             points = [
-                [x1, h / 2],
-                [x1, h / 2],
-                [x2, h - pop[1] * fac],
-                [x2, h - pop[2] * fac],
+                [x1, height / 2],
+                [x1, height / 2],
+                [x2, height - pop[1] * height_per_creature],
+                [x2, height - pop[2] * height_per_creature],
             ]
-            pygame.draw.polygon(sac, species_to_color(sp, ui), points)
+            pygame.draw.polygon(labels, species_to_color(sp, ui), points)
     else:
-        trapezoid_helper(sac, data, g, g - 1, 0, c_count, x1, x2, fac, 0, ui)
+        trapezoid_helper(
+            labels,
+            data,
+            generation_idx,
+            generation_idx - 1,
+            x1,
+            x2,
+            height_per_creature,
+            0,
+            ui,
+        )
 
 
 # TODO naming
@@ -141,28 +149,28 @@ def get_range_even_if_none(dicty, key):
 
 
 # TODO bruh naming
-def trapezoid_helper(sac, data, g1, g2, i_start, i_end, x1, x2, FAC, level, ui):
+def trapezoid_helper(sac, data, g1, g2, x1, x2, pixels_per_creature, level, ui):
     pop2 = [0, 0, 0]
     h = sac.get_height()
     for sp in data[g1].keys():
         pop1 = data[g1][sp]
         if level == 0 and pop1[1] != pop2[2]:  # there was a gap
-            trapezoid_helper(sac, data, g2, g1, pop2[2], pop1[1], x2, x1, FAC, 1, ui)
+            trapezoid_helper(sac, data, g2, g1, x2, x1, pixels_per_creature, 1, ui)
         pop2 = get_range_even_if_none(data[g2], sp)
         points = [
-            [x1, h - pop2[1] * FAC],
-            [x1, h - pop2[2] * FAC],
-            [x2, h - pop1[2] * FAC],
-            [x2, h - pop1[1] * FAC],
+            [x1, h - pop2[1] * pixels_per_creature],
+            [x1, h - pop2[2] * pixels_per_creature],
+            [x2, h - pop1[2] * pixels_per_creature],
+            [x2, h - pop1[1] * pixels_per_creature],
         ]
         pygame.draw.polygon(sac, species_to_color(sp, ui), points)
 
 
-def draw_gene_graph(species_info, prominent_species, gg, sim, ui, font):
-    r = ui.GENEALOGY_COOR[4]
-    h = gg.get_height() - r * 2
-    w = gg.get_width() - r * 2
-    gg.fill((0, 0, 0))
+def draw_gene_graph(species_info, prominent_species, gene_graph, sim, ui, font):
+    r = ui.geneology_coords[4]
+    h = gene_graph.get_height() - r * 2
+    w = gene_graph.get_width() - r * 2
+    gene_graph.fill((0, 0, 0))
     if len(sim.creatures) == 0:
         return
 
@@ -177,14 +185,22 @@ def draw_gene_graph(species_info, prominent_species, gg, sim, ui, font):
         for i in range(len(prominent_species[level])):
             s = prominent_species[level][i]
             draw_species_circle(
-                gg, s, species_info[s].coor, r, sim, species_info, font, True, ui
+                gene_graph,
+                s,
+                species_info[s].coor,
+                r,
+                sim,
+                species_info,
+                font,
+                True,
+                ui,
             )
 
 
 def display_all_graphs(screen, sim, ui):
     white = (255, 255, 255)
     blit_graphs_and_marks(screen, sim, ui)
-    blit_gg_and_marks(screen, sim, ui)
+    blit_gene_graph_and_marks(screen, sim, ui)
 
     if sim.last_gen_run_time >= 0:
         right_text(
@@ -198,19 +214,19 @@ def display_all_graphs(screen, sim, ui):
 
 
 def blit_graphs_and_marks(screen, sim, ui):
-    screen.blit(ui.graph, ui.GRAPH_COOR[0:2])
-    screen.blit(ui.sac, ui.SAC_COOR[0:2])
+    screen.blit(ui.graph, ui.graph_coords[0:2])
+    screen.blit(ui.labels, ui.sac_coords[0:2])
     green = (0, 255, 0)
     white = (255, 255, 255)
-    a = int(ui.genSlider.val)
-    b = int(ui.genSlider.val_max)
+    a = int(ui.generation_slider.val)
+    b = int(ui.generation_slider.val_max)
     a2 = min(a, b - 1)
     if b == 0:
         return
 
     if a < b:
         frac = (a + 1) / b
-        line_x = ui.SAC_COOR[0] + 70 + (ui.graph.get_width() - 70) * frac
+        line_x = ui.sac_coords[0] + 70 + (ui.graph.get_width() - 70) * frac
         line_ys = [[50, 550], [560, 860]]
         for line_y in line_ys:
             pygame.draw.line(
@@ -218,11 +234,11 @@ def blit_graphs_and_marks(screen, sim, ui):
             )
 
     frac = (a2 + 1) / b
-    line_x = ui.SAC_COOR[0] + 70 + (ui.graph.get_width() - 70) * frac
+    line_x = ui.sac_coords[0] + 70 + (ui.graph.get_width() - 70) * frac
     median = sim.percentiles[a2][50]
     right_text(
         screen,
-        f"Median: {dist_to_text(median, True, sim.UNITS_PER_METER)}",
+        f"Median: {dist_to_text(median, True, sim.units_per_meter)}",
         1800,
         28,
         white,
@@ -232,9 +248,9 @@ def blit_graphs_and_marks(screen, sim, ui):
     top_species = get_top_species(sim, a2)
     for sp in sim.species_pops[a2].keys():
         pop = sim.species_pops[a2][sp]
-        if pop[0] >= sim.c_count * sim.S_VISIBLE:
+        if pop[0] >= sim.creature_count * sim.s_visible:
             species_i = (pop[1] + pop[2]) / 2
-            species_y = 560 + 300 * (1 - species_i / sim.c_count)
+            species_y = 560 + 300 * (1 - species_i / sim.creature_count)
             name = species_to_name(sp, ui)
             color = species_to_color(sp, ui)
             outline_color = ui.white if sp == top_species else None
@@ -246,16 +262,15 @@ def blit_graphs_and_marks(screen, sim, ui):
                 color,
                 ui.small_font,
                 0.0,
-                [ui.BLACK, outline_color],
+                [ui.black, outline_color],
             )
 
 
-# TODO: ???
-def blit_gg_and_marks(screen, sim, ui):
-    screen.blit(ui.gene_graph, ui.GENEALOGY_COOR[0:2])
-    r = 42  # TODO ??
-    a = int(ui.genSlider.val)
-    b = int(ui.genSlider.val_max)
+def blit_gene_graph_and_marks(screen, sim, ui):
+    screen.blit(ui.gene_graph, ui.geneology_coords[0:2])
+    radius = 42
+    a = int(ui.generation_slider.val)
+    b = int(ui.generation_slider.val_max)
     a2 = min(a, b - 1)
     if b == 0:
         return
@@ -266,17 +281,19 @@ def blit_gg_and_marks(screen, sim, ui):
         if not info.prominent:
             continue
         circle_count = 2 if sp == top_species else 1
-        cx = info.coor[0] + ui.GENEALOGY_COOR[0]
-        cy = info.coor[1] + ui.GENEALOGY_COOR[1]
+        cx = info.coor[0] + ui.geneology_coords[0]
+        cy = info.coor[1] + ui.geneology_coords[1]
         for c in range(circle_count):
-            pygame.draw.circle(screen, ui.white, (cx, cy), r + 3 + 6 * c, 3)
+            pygame.draw.circle(screen, ui.white, (cx, cy), radius + 3 + 6 * c, 3)
 
     if ui.species_storage is not None:
         sp = ui.species_storage
         if sp in sim.species_pops[a2]:
             circle_count = 2 if sp == top_species else 1
             for c in range(circle_count):
-                pygame.draw.circle(screen, ui.white, ui.storage_coor, r + 3 + 6 * c, 3)
+                pygame.draw.circle(
+                    screen, ui.white, ui.storage_coor, radius + 3 + 6 * c, 3
+                )
 
 
 def get_top_species(sim, g):

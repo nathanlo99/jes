@@ -35,7 +35,7 @@ def draw_rect(surface, transform, coor, color):
 
 
 def draw_ring_light(w, h, thickness):
-    s = math.sin(time.time() * (2 * math.pi) * 3) * 0.5 + 0.5
+    s = math.sin(time.monotonic() * (2 * math.pi) * 3) * 0.5 + 0.5
     bright = (255 * s, 255 * s, 0, 200)
     ring_light = pygame.Surface((w, h), pygame.SRCALPHA, 32)
     pygame.draw.rect(ring_light, bright, (0, 0, w, thickness))
