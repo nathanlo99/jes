@@ -6,10 +6,10 @@ class SpeciesInfo:
     def __init__(self, _sim, me, ancestor):
         self.sim = _sim
         self.speciesID = me.species
-        self.ancestorID = None
+        self.ancestor_id = None
         self.level = 0
         if ancestor is not None:
-            self.ancestorID = ancestor.species
+            self.ancestor_id = ancestor.species
             self.level = self.sim.species_info[ancestor.species].level + 1
 
         self.apex_pop = 0
@@ -29,8 +29,8 @@ class SpeciesInfo:
     ):  # if you are prominent, all your ancestors become prominent.
         self.prominent = True
         self.insertIntoProminentSpeciesList()
-        if self.ancestorID is not None:  # you have a parent
-            ancestor = self.sim.species_info[self.ancestorID]
+        if self.ancestor_id is not None:  # you have a parent
+            ancestor = self.sim.species_info[self.ancestor_id]
             if not ancestor.prominent:
                 ancestor.becomeProminent()
 
@@ -48,7 +48,7 @@ class SpeciesInfo:
             ancestorCompare = (
                 0
                 if self.level == 0
-                else self.sim.species_info[other].ancestorID - self.ancestorID
+                else self.sim.species_info[other].ancestor_id - self.ancestor_id
             )
             if ancestorCompare == 0:  # siblings
                 if other < i:

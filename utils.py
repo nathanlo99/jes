@@ -113,7 +113,7 @@ def brighten(color, b):
         return (color[0] * b, color[1] * b, color[2] * b)
 
 
-def speciesToColor(s, ui):
+def species_to_color(s, ui):
     salted = str(s) + ui.salt
     if s in ui.sc_colors:
         salted = ui.sc_colors[s] + ui.salt

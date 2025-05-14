@@ -5,7 +5,7 @@ import numpy as np
 from utils import applyMuscles
 from jes_creature import Creature
 from jes_species_info import SpeciesInfo
-from jes_dataviz import drawAllGraphs
+from jes_dataviz import draw_all_graphs
 
 
 class Sim:
@@ -290,7 +290,7 @@ class Sim:
         )
         self.species_pops.append(newSpeciesPops)
 
-        drawAllGraphs(self, self.ui)
+        draw_all_graphs(self, self.ui)
 
         self.getCalmStates(gen + 1, 0, self.c_count, self.stabilization_time, True)
         # Calm the creatures down so no potential energy is stored

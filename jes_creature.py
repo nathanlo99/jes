@@ -4,8 +4,8 @@ import random
 import pygame
 import numpy as np
 
-from utils import arrayLerp, dist_to_text, speciesToColor, list_lerp, lerp
-from jes_shapes import drawRect, drawTextRect, centerText, drawClock
+from utils import arrayLerp, dist_to_text, species_to_color, list_lerp, lerp
+from jes_shapes import draw_rect, draw_text_rect, center_text, draw_clock
 
 
 class Creature:
@@ -45,14 +45,14 @@ class Creature:
         sign_color = (150, 100, 50)
 
         # sky
-        drawRect(surface, transform, None, black)
+        draw_rect(surface, transform, None, black)
 
         # signs
         font = self.ui.big_font if transform[2] >= 50 else self.ui.small_font
         for meters in range(0, 3000, 100):
             u = meters * self.sim.UNITS_PER_METER
-            drawRect(surface, transform, [u - 0.2, -6, u + 0.2, 0], sign_color)
-            drawTextRect(
+            draw_rect(surface, transform, [u - 0.2, -6, u + 0.2, 0], sign_color)
+            draw_text_rect(
                 surface,
                 transform,
                 [u - 1.5, -6.8, u + 1.5, -5.4],
@@ -63,7 +63,7 @@ class Creature:
             )
 
         # ground
-        drawRect(surface, transform, [None, 0, None, None], white)
+        draw_rect(surface, transform, [None, 0, None, None], white)
 
     def draw_creature(
         self,
@@ -97,19 +97,19 @@ class Creature:
                 (255, 0, 0),
                 ((lx, ly + lh + ar), (lx - ar, ly + lh), (lx + ar, ly + lh)),
             )
-            centerText(
+            center_text(
                 surface,
                 f"{dist_to_text(avg_x, True, self.sim.UNITS_PER_METER)}",
                 lx,
                 ly + 18,
-                self.ui.WHITE,
+                self.ui.white,
                 self.ui.small_font,
             )
 
             ratio = 1 - frame / self.sim.trial_time
         if should_draw_clock:
             assert draw_labels
-            drawClock(
+            draw_clock(
                 surface,
                 [40, 40, 32],
                 ratio,
@@ -132,7 +132,7 @@ class Creature:
         radius2 = icon_dimension[0] * 0.12
         pygame.draw.circle(
             icon,
-            speciesToColor(self.species, self.ui),
+            species_to_color(self.species, self.ui),
             (icon_dimension[0] - radius2, radius2),
             radius,
         )

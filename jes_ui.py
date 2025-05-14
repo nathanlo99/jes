@@ -5,20 +5,20 @@ import numpy as np
 import pygame
 
 from utils import (
-    speciesToColor,
+    species_to_color,
     species_to_name,
     dist_to_text,
     bound,
     getDist,
     arrayIntMultiply,
 )
-from jes_dataviz import displayAllGraphs, drawAllGraphs
+from jes_dataviz import display_all_graphs, draw_all_graphs
 from jes_shapes import (
-    drawRingLight,
-    drawX,
-    centerText,
-    alignText,
-    drawSpeciesCircle,
+    draw_ring_light,
+    draw_x,
+    center_text,
+    align_text,
+    draw_species_circle,
 )
 from jes_slider import Slider
 from jes_button import Button
@@ -112,7 +112,7 @@ class UI:
         self.GREEN = (0, 255, 0)
         self.GRAYISH = (108, 118, 155)
         self.BLACK = (0, 0, 0)
-        self.WHITE = (255, 255, 255)
+        self.white = (255, 255, 255)
         self.MOSAIC_COLOR = (80, 80, 80)
         self.SAMPLE_FREEZE_TIME = 90
         self.showXs = True
@@ -306,7 +306,7 @@ class UI:
                     EXTRA = 1
                     pygame.draw.rect(
                         self.mosaicScreen,
-                        speciesToColor(creature.species, self),
+                        species_to_color(creature.species, self),
                         (
                             creature.icon_coor[0],
                             creature.icon_coor[1],
@@ -316,7 +316,7 @@ class UI:
                     )
                 if not creature.living and self.showXs:
                     color = (255, 0, 0) if s <= 1 else (0, 0, 0)
-                    drawX(
+                    draw_x(
                         creature.icon_coor,
                         self.ICON_DIM[s][0],
                         color,
@@ -341,10 +341,10 @@ class UI:
             ]
 
         for i in range(len(stri)):
-            color = self.WHITE
+            color = self.white
             if stri[i][0:7] == "Species":
-                color = speciesToColor(creature.species, self)
-            centerText(
+                color = species_to_color(creature.species, self)
+            center_text(
                 self.infoBarScreen,
                 stri[i],
                 X_center,
@@ -366,17 +366,17 @@ class UI:
             y = coor[1] + (i // per_row) * H
             screen.blit(ms, (x, y))
             if titles is not None:
-                centerText(screen, titles[i], x + W / 2, y + H - 30, colors[i], font)
+                center_text(screen, titles[i], x + W / 2, y + H - 30, colors[i], font)
 
     def drawMovieQuad(self, species):
         L = 4
         info = self.sim.species_info[species]
-        a_name = species_to_name(info.ancestorID, self)
+        a_name = species_to_name(info.ancestor_id, self)
         s_name = species_to_name(species, self)
         titles = ["Ancestor", "First", "Apex", "Last"]
         mask = [True] * 4
         for i in range(L):
-            if (info.ancestorID is None and i == 0) or (
+            if (info.ancestor_id is None and i == 0) or (
                 i >= 2 and info.getWhen(i) == info.getWhen(i - 1)
             ):
                 mask[i] = False
@@ -394,7 +394,7 @@ class UI:
     def drawInfoBarSpecies(self, species):
         self.infoBarScreen.fill(self.MOSAIC_COLOR)
         info = self.sim.species_info[species]
-        a_name = species_to_name(info.ancestorID, self)
+        a_name = species_to_name(info.ancestor_id, self)
         s_name = species_to_name(species, self)
         now = min(self.genSlider.val, len(self.sim.species_pops) - 1)
         now_pop = 0
@@ -408,15 +408,15 @@ class UI:
             f"Lifespan: G{info.getWhen(1)} - G{info.getWhen(3)}{extinct_string}",
             f"Population:   {info.apex_pop} at apex (G{info.getWhen(2)})   |   {now_pop} now (G{now})",
         ]
-        colors = [self.WHITE] * len(strings)
-        colors[0] = speciesToColor(species, self)
-        if info.ancestorID is None:
+        colors = [self.white] * len(strings)
+        colors[0] = species_to_color(species, self)
+        if info.ancestor_id is None:
             strings[1] = "Primordial species"
         else:
-            colors[1] = speciesToColor(info.ancestorID, self)
+            colors[1] = species_to_color(info.ancestor_id, self)
         for i in range(len(strings)):
             X_center = int(self.INFO_W * (0.5 if i == 3 else 0.3))
-            centerText(
+            center_text(
                 self.infoBarScreen,
                 strings[i],
                 X_center,
@@ -446,7 +446,7 @@ class UI:
             col = (0, 0, 0)
             creature = self.sim.creatures[gen][self.sim.rankings[gen][c]]
             if creature.species == species:
-                col = speciesToColor(species, self)
+                col = species_to_color(species, self)
             pygame.draw.rect(screen, col, (x, y, R, R))
 
     def drawMenuText(self):
@@ -464,7 +464,7 @@ class UI:
         if self.species_storage is not None:
             s = self.species_storage
             R = self.GENEALOGY_COOR[4]
-            drawSpeciesCircle(
+            draw_species_circle(
                 self.screen,
                 s,
                 self.storage_coor,
@@ -493,20 +493,20 @@ class UI:
                 preview = creature.draw_icon(
                     DIM, self.MOSAIC_COLOR, self.sim.beat_fade_time
                 )
-                centerText(
+                center_text(
                     preview,
                     f"{names[r]} creature",
                     DIM[0] / 2,
                     DIM[1] - 20,
-                    self.WHITE,
+                    self.white,
                     self.small_font,
                 )
-                alignText(
+                align_text(
                     preview,
                     dist_to_text(creature.fitness, True, self.sim.UNITS_PER_METER),
                     10,
                     20,
-                    self.WHITE,
+                    self.white,
                     self.small_font,
                     0.0,
                     None,
@@ -579,7 +579,7 @@ class UI:
                     c = self.get_highlighted_species()
                     if c is not None:
                         self.sc_colors[c] = str(random.uniform(0, 1))
-                        drawAllGraphs(self.sim, self)
+                        draw_all_graphs(self.sim, self)
                         self.clearMovies()
                         self.detectMouseMotion()
                 elif event.key == 13:  # pressing Enter
@@ -611,7 +611,7 @@ class UI:
         self.screen.blit(self.background_pic, (0, 0))
         self.drawMenuText()
         self.drawPreviews()
-        displayAllGraphs(self.screen, self.sim, self)
+        display_all_graphs(self.screen, self.sim, self)
         self.drawSlidersAndButtons()
         self.displayCreatureMosaic(self.screen)
         self.display_movies(self.screen)
@@ -643,7 +643,7 @@ class UI:
             for i in range(num_movie_screens):
                 sp = self.creatureHighlight[i].species
                 species_names[i] = species_to_name(sp, self)
-                species_colors[i] = speciesToColor(sp, self)
+                species_colors[i] = species_to_color(sp, self)
             self.drawMovieGrid(
                 screen,
                 (0, 0),
@@ -664,14 +664,14 @@ class UI:
             # TODO: destruct
             dimensions = self.previewLocations[self.CLH[2]]
             self.screen.blit(
-                drawRingLight(dimensions[2], dimensions[3], 6),
+                draw_ring_light(dimensions[2], dimensions[3], 6),
                 (dimensions[0], dimensions[1]),
             )
         else:
             coor = self.sim.creatures[gen][self.CLH[1]].icon_coor
             x = coor[0] + self.CM_MARGIN1
             y = coor[1] + self.CM_MARGIN1
-            self.screen.blit(drawRingLight(coor[2], coor[3], 6), (x, y))
+            self.screen.blit(draw_ring_light(coor[2], coor[3], 6), (x, y))
 
     def detectSliders(self):
         if self.sliderDrag is not None:
