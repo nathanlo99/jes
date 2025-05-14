@@ -15,7 +15,7 @@ def draw_text_rect(surface, transform, coords, color1, color2, text, font):
     center_y = (y1 + y2) / 2
     text_x = center_x * s + tx
     text_y = center_y * s + ty
-    center_text(surface, text, text_x, text_y, color2, font)
+    display_centered_text(surface, text, text_x, text_y, color2, font)
 
 
 def draw_rect(surface, transform, coords, color):
@@ -58,7 +58,7 @@ def draw_x(icon_coor, I, color, screen):
         pygame.draw.polygon(screen, color, points)
 
 
-def center_text(screen, stri, x, y, color, font):
+def display_centered_text(screen, stri, x, y, color, font):
     align_text(screen, stri, x, y, color, font, 0.5, None)
 
 
@@ -119,7 +119,7 @@ def draw_clock(surface, coords, ratio, text, font):
             points2[2][1] = lerp(points[1][1], points[2][1], prog)
             pygame.draw.polygon(surface, white, points2)
 
-    center_text(surface, text, x, y, black, font)
+    display_centered_text(surface, text, x, y, black, font)
 
 
 def draw_arrow(screen, _start, _end, margin, head, color):
@@ -152,9 +152,9 @@ def draw_species_circle(
     cx, cy = coords
 
     pygame.draw.circle(screen, color, coords, radius)
-    center_text(screen, name, cx, cy - 22, (0, 0, 0), font)
+    display_centered_text(screen, name, cx, cy - 22, (0, 0, 0), font)
 
-    creature = sim.get_create_with_id(info.reps[2])
+    creature = sim.get_create_with_id(info.representatives[2])
     tiny_icon = pygame.transform.scale(creature.icons[0], (50, 50))
     screen.blit(tiny_icon, (cx - 25, cy - 11))
 

@@ -2,7 +2,7 @@ import time
 import random
 
 import numpy as np
-from utils import applyMuscles
+from utils import apply_muscles
 from jes_creature import Creature
 from jes_species_info import SpeciesInfo
 from jes_dataviz import draw_all_graphs
@@ -172,7 +172,7 @@ class Simulation:
                 # decrease y-velo (3rd node coords) by G
                 node_coords[:, :, :, 3] += self.gravity_acceleration_coef
 
-            applyMuscles(node_coords, muscles[:, :, :, beat, :], self.muscle_coef)
+            apply_muscles(node_coords, muscles[:, :, :, beat, :], self.muscle_coef)
             node_coords[:, :, :, 2:4] *= friction
             # all node's x and y coordinates are adjusted by velocity_x and velocity_y
             node_coords[:, :, :, 0:2] += node_coords[:, :, :, 2:4]
@@ -213,10 +213,12 @@ class Simulation:
             running += pop
 
             info = self.species_info[sp]
-            info.reps[3] = best_of_each_species[sp]  # most-recent representative
+            # most-recent representative
+            info.representatives[3] = best_of_each_species[sp]
             if pop > info.apex_pop:  # This species reached its highest population
                 info.apex_pop = pop
-                info.reps[2] = best_of_each_species[sp]  # apex representative
+                # apex representative
+                info.representatives[2] = best_of_each_species[sp]
 
             # prominent threshold
             if pop >= self.creature_count * self.s_notable and not info.prominent:

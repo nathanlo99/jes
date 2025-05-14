@@ -4,8 +4,8 @@ import random
 import pygame
 import numpy as np
 
-from utils import arrayLerp, dist_to_text, species_to_color, list_lerp, lerp
-from jes_shapes import draw_rect, draw_text_rect, center_text, draw_clock
+from utils import array_lerp, clamp, dist_to_text, species_to_color, list_lerp, lerp
+from jes_shapes import draw_rect, draw_text_rect, display_centered_text, draw_clock
 
 
 class Creature:
@@ -13,7 +13,7 @@ class Creature:
         self.dna = dna
         self.calm_state = None
         self.icons = [None] * 2
-        self.icon_coords = None
+        self.icon_coor = None
         self.id = id_number
         self.fitness = None
         self.rank = None
@@ -39,7 +39,7 @@ class Creature:
             points[p] = [tx + node_state[px, py, 0] * s, ty + node_state[px, py, 1] * s]
         pygame.draw.polygon(surface, color, points)
 
-    def drawEnvironment(self, surface, node_state, frame, transform):
+    def draw_environment(self, surface, node_state, frame, transform):
         black = (0, 0, 0)
         white = (255, 255, 255)
         sign_color = (150, 100, 50)
@@ -75,7 +75,7 @@ class Creature:
         should_draw_clock: bool,
     ):
         if draw_labels:
-            self.drawEnvironment(surface, node_state, frame, transform)
+            self.draw_environment(surface, node_state, frame, transform)
 
         cell_surface = pygame.Surface(surface.get_size(), pygame.SRCALPHA, 32)
         for x in range(self.sim.CW):
@@ -98,7 +98,7 @@ class Creature:
                 (255, 0, 0),
                 ((lx, ly + lh + ar), (lx - ar, ly + lh), (lx + ar, ly + lh)),
             )
-            center_text(
+            display_centered_text(
                 surface,
                 f"{dist_to_text(avg_x, True, self.sim.units_per_meter)}",
                 lx,
@@ -188,12 +188,11 @@ class Creature:
         ) * self.sim.traits_per_box
         traits = dna[dna_idx : dna_idx + self.sim.traits_per_box]
         traits_prev = dna[previous_dna_idx : previous_dna_idx + self.sim.traits_per_box]
-        traits = arrayLerp(traits_prev, traits, prog)
+        traits = array_lerp(traits_prev, traits, prog)
 
-        red = min(max(int(128 + traits[0] * 128), 0), 255)
-        green = min(max(int(128 + traits[1] * 128), 0), 255)
-        # alpha can't go below 25%
-        alpha = min(max(int(155 + traits[2] * 100), 64), 255)
+        red = clamp(int(128 + traits[0] * 128), 0, 255)
+        green = clamp(int(128 + traits[1] * 128), 0, 255)
+        alpha = clamp(int(155 + traits[2] * 100), 64, 255)
         color_result = (red, green, 255, alpha)
 
         if self.codon_with_change is not None:
@@ -205,8 +204,9 @@ class Creature:
                 next_green = 1.0
             previous_green = 0.0
             if (
-                self.codon_with_change >= previous_dna_idx
-                and self.codon_with_change < previous_dna_idx + self.sim.traits_per_box
+                previous_dna_idx
+                <= self.codon_with_change
+                < previous_dna_idx + self.sim.traits_per_box
             ):
                 previous_green = 1.0
             greenness = lerp(previous_green, next_green, prog)

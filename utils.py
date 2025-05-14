@@ -4,7 +4,7 @@ from hashlib import sha256
 import numpy as np
 
 
-def arrayLerp(arrA, arrB, x):
+def array_lerp(arrA, arrB, x):
     return arrA + (arrB - arrA) * x
 
 
@@ -101,58 +101,54 @@ def species_to_name(s, ui):
     return name
 
 
-def brighten(color, b):
-    if b >= 1:
-        fac = b - 1
+def brighten(color, brightness):
+    if brightness >= 1:
+        factor = brightness - 1
         return (
-            lerp(color[0], 255, fac),
-            lerp(color[1], 255, fac),
-            lerp(color[2], 255, fac),
+            lerp(color[0], 255, factor),
+            lerp(color[1], 255, factor),
+            lerp(color[2], 255, factor),
         )
-    else:
-        return (color[0] * b, color[1] * b, color[2] * b)
+    return (color[0] * brightness, color[1] * brightness, color[2] * brightness)
 
 
 def species_to_color(s, ui):
-    salted = str(s) + ui.salt
-    if s in ui.overridden_colors:
-        salted = ui.overridden_colors[s] + ui.salt
-    _hex = sha256(salted.encode("utf-8")).hexdigest()
-    hue = (int(_hex, 16) % 10000) / 10000
-    brightness = (math.floor(int(_hex, 16) // 10000) % 100) / 100
+    override_color = ui.overridden_colors.get(s, str(s))
+    salted = override_color + ui.salt
+    hex_digest = sha256(salted.encode("utf-8")).hexdigest()
+    hue = (int(hex_digest, 16) % 10000) / 10000
+    brightness = (math.floor(int(hex_digest, 16) // 10000) % 100) / 100
     color = hue_to_rgb(hue)
-    new_color = brighten(color, 0.85 + 0.6 * brightness)
-    return new_color
+    return brighten(color, 0.85 + 0.6 * brightness)
 
 
-def bound(x):
-    return min(max(x, 0), 1)
+def clamp(x: float, min_value: float = 0, max_value: float = 1) -> float:
+    return min(max(x, min_value), max_value)
 
 
-def lerp(a, b, x):
+def lerp(a: float, b: float, x: float) -> float:
     return a + (b - a) * x
 
 
 def dist_to_text(dist, sigfigs, u):
     if sigfigs:
         return f"{dist / u:.2f}cm"
-    else:
-        return str(int(dist / u)) + "cm"
+    return str(int(dist / u)) + "cm"
 
 
-def getDistanceArray(a, b):
+def get_distance_array(a, b):
     x_dist = a[:, :, :, 0] - b[:, :, :, 0]
     y_dist = a[:, :, :, 1] - b[:, :, :, 1]
     return np.sqrt(np.square(x_dist) + np.square(y_dist))
 
 
-def applyMuscles(n, m, muscle_coef):
-    xNeighborDists = getDistanceArray(n[:, :-1, :], n[:, 1:, :])
-    yNeighborDists = getDistanceArray(n[:, :, :-1], n[:, :, 1:])
-    posDiagNeighborDists = getDistanceArray(n[:, :-1, :-1], n[:, 1:, 1:])
-    negDiagNeighborDists = getDistanceArray(n[:, :-1, 1:], n[:, 1:, :-1])
+def apply_muscles(n, m, muscle_coef):
+    xNeighborDists = get_distance_array(n[:, :-1, :], n[:, 1:, :])
+    yNeighborDists = get_distance_array(n[:, :, :-1], n[:, :, 1:])
+    posDiagNeighborDists = get_distance_array(n[:, :-1, :-1], n[:, 1:, 1:])
+    negDiagNeighborDists = get_distance_array(n[:, :-1, 1:], n[:, 1:, :-1])
 
-    MAs = [None] * 6
+    muscle_attractions = [None] * 6
     segments = [
         [0, 0, 1, 0],
         [0, 1, 1, 1],
@@ -161,21 +157,25 @@ def applyMuscles(n, m, muscle_coef):
         [0, 0, 1, 1],
         [0, 1, 1, 0],
     ]
-    segments2 = [
-        [0, 0, 1, 0],
-        [0, 1, 1, 1],
-        [0, 0, 0, 1],
-        [1, 0, 1, 1],
-        [0, 0, 1, 1],
-        [0, 1, 1, 0],
-    ]
 
-    MAs[0] = getMuscleAttraction(xNeighborDists[:, :, :-1], m[:, :, :, 0], muscle_coef)
-    MAs[1] = getMuscleAttraction(xNeighborDists[:, :, 1:], m[:, :, :, 0], muscle_coef)
-    MAs[2] = getMuscleAttraction(yNeighborDists[:, :-1, :], m[:, :, :, 1], muscle_coef)
-    MAs[3] = getMuscleAttraction(yNeighborDists[:, 1:, :], m[:, :, :, 1], muscle_coef)
-    MAs[4] = getMuscleAttraction(posDiagNeighborDists, m[:, :, :, 3], muscle_coef)
-    MAs[5] = getMuscleAttraction(negDiagNeighborDists, m[:, :, :, 3], muscle_coef)
+    muscle_attractions[0] = get_muscle_attraction(
+        xNeighborDists[:, :, :-1], m[:, :, :, 0], muscle_coef
+    )
+    muscle_attractions[1] = get_muscle_attraction(
+        xNeighborDists[:, :, 1:], m[:, :, :, 0], muscle_coef
+    )
+    muscle_attractions[2] = get_muscle_attraction(
+        yNeighborDists[:, :-1, :], m[:, :, :, 1], muscle_coef
+    )
+    muscle_attractions[3] = get_muscle_attraction(
+        yNeighborDists[:, 1:, :], m[:, :, :, 1], muscle_coef
+    )
+    muscle_attractions[4] = get_muscle_attraction(
+        posDiagNeighborDists, m[:, :, :, 3], muscle_coef
+    )
+    muscle_attractions[5] = get_muscle_attraction(
+        negDiagNeighborDists, m[:, :, :, 3], muscle_coef
+    )
 
     # The array n is a 100 x 5 x 5 x 4 dimensional array,
     # and it encodes the position and velocity data for all 100 creatures on a frame.
@@ -200,13 +200,21 @@ def applyMuscles(n, m, muscle_coef):
         delta_nx = delta_x / delta_magnitude
         delta_ny = delta_y / delta_magnitude
 
-        n[:, s[0] : s[0] + CW, s[1] : s[1] + CW, 2] += delta_nx * MAs[dire]
-        n[:, s[0] : s[0] + CW, s[1] : s[1] + CW, 3] += delta_ny * MAs[dire]
-        n[:, s[2] : s[2] + CH, s[3] : s[3] + CH, 2] -= delta_nx * MAs[dire]
-        n[:, s[2] : s[2] + CH, s[3] : s[3] + CH, 3] -= delta_ny * MAs[dire]
+        n[:, s[0] : s[0] + CW, s[1] : s[1] + CW, 2] += (
+            delta_nx * muscle_attractions[dire]
+        )
+        n[:, s[0] : s[0] + CW, s[1] : s[1] + CW, 3] += (
+            delta_ny * muscle_attractions[dire]
+        )
+        n[:, s[2] : s[2] + CH, s[3] : s[3] + CH, 2] -= (
+            delta_nx * muscle_attractions[dire]
+        )
+        n[:, s[2] : s[2] + CH, s[3] : s[3] + CH, 3] -= (
+            delta_ny * muscle_attractions[dire]
+        )
 
 
-def getMuscleAttraction(dists, m, muscle_coef):
+def get_muscle_attraction(dists, m, muscle_coef):
     return (m - dists) * muscle_coef
 
 
@@ -215,7 +223,4 @@ def get_distance(x1, y1, x2, y2):
 
 
 def array_int_multiply(arr, factor):
-    result = [None] * len(arr)
-    for i in range(len(arr)):
-        result[i] = int(arr[i] * factor)
-    return result
+    return [int(x * factor) for x in arr]

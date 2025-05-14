@@ -8,7 +8,7 @@ from utils import (
     species_to_color,
     species_to_name,
     dist_to_text,
-    bound,
+    clamp,
     get_distance,
     array_int_multiply,
 )
@@ -16,7 +16,7 @@ from jes_dataviz import display_all_graphs, draw_all_graphs
 from jes_shapes import (
     draw_ring_light,
     draw_x,
-    center_text,
+    display_centered_text,
     align_text,
     draw_species_circle,
 )
@@ -264,7 +264,7 @@ class UI:
                 self.visual_sim_memory = []
                 self.creature_highlight = []
                 self.movie_screens = []
-                for representative_id in info.reps:
+                for representative_id in info.representatives:
                     gen = representative_id // self.sim.creature_count
                     c = representative_id % self.sim.creature_count
                     self.creature_highlight.append(self.sim.creatures[gen][c])
@@ -364,7 +364,7 @@ class UI:
             color = self.white
             if description.startswith("Species"):
                 color = species_to_color(creature.species, self)
-            center_text(
+            display_centered_text(
                 self.info_bar_screen,
                 description,
                 x_center,
@@ -386,7 +386,7 @@ class UI:
             y = coords[1] + (i // per_row) * movie_height
             screen.blit(movie_screen, (x, y))
             if titles is not None:
-                center_text(
+                display_centered_text(
                     screen,
                     titles[i],
                     x + movie_width / 2,
@@ -443,7 +443,7 @@ class UI:
             colors[1] = species_to_color(info.parent_species, self)
         for i, string in enumerate(strings):
             x_center = int(self.info_width * (0.5 if i == 3 else 0.3))
-            center_text(
+            display_centered_text(
                 self.info_bar_screen,
                 string,
                 x_center,
@@ -523,7 +523,7 @@ class UI:
                 preview = creature.draw_icon(
                     dimensions, self.mosaic_color, self.sim.beat_fade_time
                 )
-                center_text(
+                display_centered_text(
                     preview,
                     f"{names[r]} creature",
                     dimensions[0] / 2,
@@ -654,7 +654,7 @@ class UI:
             time.monotonic() - self.show_creatures_button.last_click_time
         )
         pan_time = 0.2
-        frac = bound(time_since_last_press / pan_time)
+        frac = clamp(time_since_last_press / pan_time)
         panel_y = 0
         if self.mosaic_visible:
             panel_y = self.cm_margin1 - self.mosaic_screen.get_height() * (1 - frac)
@@ -712,7 +712,7 @@ class UI:
         if self.slider_drag is not None:
             mouse_x, _ = pygame.mouse.get_pos()
             s_x, _, s_w, _, s_dw = self.slider_drag.dim
-            ratio = bound(((mouse_x - s_dw * 0.5) - s_x) / (s_w - s_dw))
+            ratio = clamp(((mouse_x - s_dw * 0.5) - s_x) / (s_w - s_dw))
 
             s_range = self.slider_drag.val_max - self.slider_drag.val_min
             self.slider_drag.tval = ratio * s_range + self.slider_drag.val_min

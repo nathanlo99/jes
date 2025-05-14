@@ -1,6 +1,6 @@
 import time
 import pygame
-from jes_shapes import center_text
+from jes_shapes import display_centered_text
 
 
 class Button:
@@ -20,7 +20,7 @@ class Button:
         slider_surface.fill((30, 150, 230))
         if name == "Turn off ALAP" or name.endswith("Stop") or name.endswith("Hide"):
             slider_surface.fill((128, 255, 255))
-        center_text(slider_surface, name, w / 2, h / 2, (0, 0, 0), font)
+        display_centered_text(slider_surface, name, w / 2, h / 2, (0, 0, 0), font)
 
         screen.blit(slider_surface, (x, y))
 
