@@ -8,7 +8,7 @@ def arrayLerp(arrA, arrB, x):
     return arrA + (arrB - arrA) * x
 
 
-def listLerp(listA, listB, x):
+def list_lerp(listA, listB, x):
     return [a + (b - a) * x for a, b in zip(listA, listB)]
 
 

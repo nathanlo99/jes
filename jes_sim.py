@@ -1,10 +1,11 @@
+import time
+import random
+
 import numpy as np
 from utils import applyMuscles
 from jes_creature import Creature
 from jes_species_info import SpeciesInfo
 from jes_dataviz import drawAllGraphs
-import time
-import random
 
 
 class Sim:
@@ -85,71 +86,71 @@ class Sim:
 
         for c in range(self.c_count):
             for i in range(2):
-                self.creatures[0][c].icons[i] = self.creatures[0][c].drawIcon(
+                self.creatures[0][c].icons[i] = self.creatures[0][c].draw_icon(
                     self.ui.ICON_DIM[i], self.ui.MOSAIC_COLOR, self.beat_fade_time
                 )
 
         self.ui.drawCreatureMosaic(0)
 
-    def createNewCreature(self, idNumber):
+    def createNewCreature(self, id):
         dna = np.clip(np.random.normal(0.0, 1.0, self.trait_count), -3, 3)
-        return Creature(dna, idNumber, -1, self, self.ui)
+        return Creature(dna, id, -1, self, self.ui)
 
-    def getCalmStates(self, gen, startIndex, endIndex, frameCount, calmingRun):
-        param = self.simulateImport(gen, startIndex, endIndex, False)
-        nodeCoor, muscles, _ = self.simulateRun(param, frameCount, True)
+    def getCalmStates(self, gen, start_idx, end_idx, frameCount, calmingRun):
+        param = self.simulate_import(gen, start_idx, end_idx, False)
+        nodeCoor, muscles, _ = self.simulate_run(param, frameCount, True)
         for c in range(self.c_count):
-            self.creatures[gen][c].saveCalmState(nodeCoor[c])
+            self.creatures[gen][c].save_calm_state(nodeCoor[c])
 
-    def getStartingNodeCoor(self, gen, startIndex, endIndex, fromCalmState):
-        COUNT = endIndex - startIndex
+    def getStartingNodeCoor(self, gen, start_idx, end_idx, from_calm_state):
+        COUNT = end_idx - start_idx
         n = np.zeros((COUNT, self.CH + 1, self.CW + 1, self.node_coor_count))
-        if not fromCalmState or self.creatures[gen][0].calmState is None:
+        if not from_calm_state or self.creatures[gen][0].calm_state is None:
             # create grid of nodes along perfect gridlines
             coorGrid = np.mgrid[0 : self.CW + 1, 0 : self.CH + 1]
             coorGrid = np.swapaxes(np.swapaxes(coorGrid, 0, 1), 1, 2)
             n[:, :, :, 0:2] = coorGrid
         else:
             # load calm state into nodeCoor
-            for c in range(startIndex, endIndex):
-                n[c - startIndex, :, :, :] = self.creatures[gen][c].calmState
+            for c in range(start_idx, end_idx):
+                n[c - start_idx, :, :, :] = self.creatures[gen][c].calm_state
                 n[
-                    c - startIndex, :, :, 1
+                    c - start_idx, :, :, 1
                 ] -= self.CH  # lift the creature above ground level
         return n
 
-    def getMuscleArray(self, gen, startIndex, endIndex):
-        COUNT = endIndex - startIndex
+    def getMuscleArray(self, gen, start_idx, end_idx):
+        COUNT = end_idx - start_idx
         m = np.zeros(
             (COUNT, self.CH, self.CW, self.beats_per_cycle, self.traits_per_box + 1)
         )  # add one trait for diagonal length.
         DNA_LEN = self.CH * self.CW * self.beats_per_cycle * self.traits_per_box
-        for c in range(startIndex, endIndex):
+        for c in range(start_idx, end_idx):
             dna = (
                 self.creatures[gen][c]
                 .dna[0:DNA_LEN]
                 .reshape(self.CH, self.CW, self.beats_per_cycle, self.traits_per_box)
             )
-            m[c - startIndex, :, :, :, : self.traits_per_box] = 1.0 + (dna) / 3.0
+            m[c - start_idx, :, :, :, : self.traits_per_box] = 1.0 + (dna) / 3.0
         m[:, :, :, :, 3] = np.sqrt(
             np.square(m[:, :, :, :, 0]) + np.square(m[:, :, :, :, 1])
         )  # Set diagonal tendons
         return m
 
-    def simulateImport(self, gen, startIndex, endIndex, fromCalmState):
-        nodeCoor = self.getStartingNodeCoor(gen, startIndex, endIndex, fromCalmState)
-        muscles = self.getMuscleArray(gen, startIndex, endIndex)
+    def simulate_import(self, gen, start_idx, end_idx, from_calm_state):
+        nodeCoor = self.getStartingNodeCoor(gen, start_idx, end_idx, from_calm_state)
+        muscles = self.getMuscleArray(gen, start_idx, end_idx)
         currentFrame = 0
         return nodeCoor, muscles, currentFrame
 
-    def frameToBeat(self, f):
+    def frame_to_beat(self, f):
         return (f // self.beat_time) % self.beats_per_cycle
 
-    def frameToBeatFade(self, f):
+    def frame_to_beat_fade(self, f):
         prog = f % self.beat_time
         return min(prog / self.beat_fade_time, 1)
 
-    def simulateRun(self, param, frameCount, calmingRun):
+    def simulate_run(self, param, frameCount, calmingRun):
         nodeCoor, muscles, startCurrentFrame = param
         friction = (
             self.calming_friction_coef if calmingRun else self.typical_friction_coef
@@ -162,7 +163,7 @@ class Sim:
             beat = 0
 
             if not calmingRun:
-                beat = self.frameToBeat(currentFrame)
+                beat = self.frame_to_beat(currentFrame)
                 nodeCoor[:, :, :, 3] += self.gravity_acceleration_coef
                 # decrease y-velo (3rd node coor) by G
             applyMuscles(nodeCoor, muscles[:, :, :, beat, :], self.muscle_coef)
@@ -227,8 +228,8 @@ class Sim:
         )  # calculates how long each generation takes to run
 
         gen = len(self.creatures) - 1
-        creatureState = self.simulateImport(gen, 0, self.c_count, True)
-        nodeCoor, muscles, _ = self.simulateRun(creatureState, self.trial_time, False)
+        creatureState = self.simulate_import(gen, 0, self.c_count, True)
+        nodeCoor, muscles, _ = self.simulate_run(creatureState, self.trial_time, False)
         finalScores = nodeCoor[:, :, :, 0].mean(
             axis=(1, 2)
         )  # find each creature's average X-coordinate
@@ -249,7 +250,7 @@ class Sim:
             else:
                 newSpeciesPops[species] = [1, None, None]
             if species not in best_of_each_species:
-                best_of_each_species[species] = self.creatures[gen][c].IDNumber
+                best_of_each_species[species] = self.creatures[gen][c].id
         self.doSpeciesInfo(newSpeciesPops, best_of_each_species)
 
         for p in range(self.HUNDRED + 1):
@@ -257,8 +258,7 @@ class Sim:
             c = currRankings[rank]
             newPercentiles[p] = self.creatures[gen][c].fitness
 
-        currCreatures = self.creatures[-1]
-        nextCreatures = [None] * self.c_count
+        next_creatures = [None] * self.c_count
         for rank in range(self.c_count // 2):
             winner = currRankings[rank]
             loser = currRankings[(self.c_count - 1) - rank]
@@ -266,23 +266,22 @@ class Sim:
                 ph = loser
                 loser = winner
                 winner = ph
-            nextCreatures[winner] = None
-            if (
-                random.uniform(0, 1) < rank / self.c_count * 2.0
-            ):  # A 1st place finisher is guaranteed to make a clone, but as we get closer to the middle the odds get more likely we just get 2 mutants.
-                nextCreatures[winner] = self.mutate(
+            next_creatures[winner] = None
+            # A 1st place finisher is guaranteed to make a clone, but as we get closer to the middle the odds get more likely we just get 2 mutants.
+            if random.uniform(0, 1) < rank / self.c_count * 2.0:
+                next_creatures[winner] = self.mutate(
                     self.creatures[gen][winner], (gen + 1) * self.c_count + winner
                 )
             else:
-                nextCreatures[winner] = self.clone(
+                next_creatures[winner] = self.clone(
                     self.creatures[gen][winner], (gen + 1) * self.c_count + winner
                 )
-            nextCreatures[loser] = self.mutate(
+            next_creatures[loser] = self.mutate(
                 self.creatures[gen][winner], (gen + 1) * self.c_count + loser
             )
             self.creatures[gen][loser].living = False
 
-        self.creatures.append(nextCreatures)
+        self.creatures.append(next_creatures)
         self.rankings = np.append(
             self.rankings, currRankings.reshape((1, self.c_count)), axis=0
         )
@@ -299,7 +298,7 @@ class Sim:
             for i in range(2):
                 self.creatures[gen + 1][c].icons[i] = self.creatures[gen + 1][
                     c
-                ].drawIcon(
+                ].draw_icon(
                     self.ui.ICON_DIM[i], self.ui.MOSAIC_COLOR, self.beat_fade_time
                 )
 
@@ -309,16 +308,16 @@ class Sim:
 
         self.ui.detectMouseMotion()
 
-    def getCreatureWithID(self, ID):
-        return self.creatures[ID // self.c_count][ID % self.c_count]
+    def get_create_with_id(self, _id):
+        return self.creatures[_id // self.c_count][_id % self.c_count]
 
-    def clone(self, parent, newID):
-        return Creature(parent.dna, newID, parent.species, self, self.ui)
+    def clone(self, parent, new_id):
+        return Creature(parent.dna, new_id, parent.species, self, self.ui)
 
-    def mutate(self, parent, newID):
-        newDNA, newSpecies, cwc = parent.getMutatedDNA(self)
-        newCreature = Creature(newDNA, newID, newSpecies, self, self.ui)
-        if newCreature.species != parent.species:
-            self.species_info.append(SpeciesInfo(self, newCreature, parent))
-            newCreature.codonWithChange = cwc
-        return newCreature
+    def mutate(self, parent, new_id):
+        new_dna, new_species, cwc = parent.get_mutated_dna(self)
+        new_creature = Creature(new_dna, new_id, new_species, self, self.ui)
+        if new_creature.species != parent.species:
+            self.species_info.append(SpeciesInfo(self, new_creature, parent))
+            new_creature.codon_with_change = cwc
+        return new_creature

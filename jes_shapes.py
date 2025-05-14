@@ -45,7 +45,7 @@ def drawRingLight(w, h, thickness):
     return ringlight
 
 
-def drawX(iconCoor, I, color, screen):
+def drawX(icon_coor, I, color, screen):
     for L in range(2):
         i1 = I * 0.02
         i2 = I * 0.06 + 3
@@ -53,8 +53,8 @@ def drawX(iconCoor, I, color, screen):
         for P in points:
             if L == 1:
                 P[0] = I - P[0]
-            P[0] += iconCoor[0]
-            P[1] += iconCoor[1]
+            P[0] += icon_coor[0]
+            P[1] += icon_coor[1]
         pygame.draw.polygon(screen, color, points)
 
 
@@ -151,7 +151,7 @@ def drawSpeciesCircle(screen, s, coor, R, sim, species_info, font, shouldDrawArr
     pygame.draw.circle(screen, color, coor, R)
     centerText(screen, name, cx, cy - 22, (0, 0, 0), font)
 
-    creature = sim.getCreatureWithID(info.reps[2])
+    creature = sim.get_create_with_id(info.reps[2])
     tiny_icon = pygame.transform.scale(creature.icons[0], (50, 50))
     screen.blit(tiny_icon, (cx - 25, cy - 11))
 

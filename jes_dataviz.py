@@ -10,11 +10,11 @@ from jes_shapes import rightText, alignText, drawSpeciesCircle
 
 def drawAllGraphs(sim, ui):
     drawLineGraph(
-        sim.percentiles, ui.graph, [70, 0, 30, 30], sim.UNITS_PER_METER, ui.smallFont
+        sim.percentiles, ui.graph, [70, 0, 30, 30], sim.UNITS_PER_METER, ui.small_font
     )
     drawSAC(sim.species_pops, ui.sac, [70, 0], ui)
     drawGeneGraph(
-        sim.species_info, sim.prominent_species, ui.gene_graph, sim, ui, ui.tinyFont
+        sim.species_info, sim.prominent_species, ui.gene_graph, sim, ui, ui.tiny_font
     )
 
 
@@ -190,7 +190,7 @@ def displayAllGraphs(screen, sim, ui):
             1200,
             28,
             WHITE,
-            ui.smallFont,
+            ui.small_font,
         )
 
 
@@ -223,7 +223,7 @@ def blitGraphsandMarks(screen, sim, ui):
         1800,
         28,
         WHITE,
-        ui.smallFont,
+        ui.small_font,
     )
 
     top_species = getTopSpecies(sim, a2)
@@ -241,7 +241,7 @@ def blitGraphsandMarks(screen, sim, ui):
                 lineX + 10,
                 speciesY,
                 color,
-                ui.smallFont,
+                ui.small_font,
                 0.0,
                 [ui.BLACK, OUTLINE],
             )

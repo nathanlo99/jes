@@ -20,8 +20,8 @@ class SpeciesInfo:
         self.prominent = False
 
         if ancestor is not None:
-            self.reps[0] = ancestor.IDNumber
-        self.reps[1] = me.IDNumber
+            self.reps[0] = ancestor.id
+        self.reps[1] = me.id
         self.coor = None
 
     def becomeProminent(
