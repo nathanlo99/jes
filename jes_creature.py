@@ -13,7 +13,7 @@ class Creature:
         self.dna = dna
         self.calm_state = None
         self.icons = [None] * 2
-        self.icon_coor = None
+        self.icon_coords = None
         self.id = id_number
         self.fitness = None
         self.rank = None
@@ -39,7 +39,7 @@ class Creature:
             points[p] = [tx + node_state[px, py, 0] * s, ty + node_state[px, py, 1] * s]
         pygame.draw.polygon(surface, color, points)
 
-    def draw_environment(self, surface, node_state, frame, transform):
+    def draw_environment(self, surface, transform):
         black = (0, 0, 0)
         white = (255, 255, 255)
         sign_color = (150, 100, 50)
@@ -75,11 +75,11 @@ class Creature:
         should_draw_clock: bool,
     ):
         if draw_labels:
-            self.draw_environment(surface, node_state, frame, transform)
+            self.draw_environment(surface, transform)
 
         cell_surface = pygame.Surface(surface.get_size(), pygame.SRCALPHA, 32)
-        for x in range(self.sim.CW):
-            for y in range(self.sim.CH):
+        for x in range(self.sim.creature_width):
+            for y in range(self.sim.creature_height):
                 self.draw_cell(cell_surface, node_state, frame, transform, x, y)
         surface.blit(cell_surface, (0, 0))
 
@@ -122,8 +122,8 @@ class Creature:
         icon.fill(background_color)
         transform = [
             icon_dimension[0] / 2,
-            icon_dimension[0] / (self.sim.CW + 2),
-            icon_dimension[0] / (self.sim.CH + 2.85),
+            icon_dimension[0] / (self.sim.creature_width + 2),
+            icon_dimension[0] / (self.sim.creature_height + 2.85),
         ]
         self.draw_creature(
             icon, self.calm_state, beat_fade_time, transform, False, False
@@ -150,12 +150,12 @@ class Creature:
         if random.uniform(0, 1) < self.sim.big_mutation_rate:  # do a big mutation
             new_species = sim.species_count
             sim.species_count += 1
-            cell_x = random.randint(0, self.sim.CW - 1)
-            cell_y = random.randint(0, self.sim.CH - 1)
+            cell_x = random.randint(0, self.sim.creature_width - 1)
+            cell_y = random.randint(0, self.sim.creature_height - 1)
             cell_beat = random.randint(0, self.sim.beats_per_cycle - 1)
 
             big_mut_loc = (
-                cell_x * self.sim.CH * self.sim.beats_per_cycle
+                cell_x * self.sim.creature_height * self.sim.beats_per_cycle
                 + cell_y * self.sim.beats_per_cycle
                 + cell_beat
             ) * self.sim.traits_per_box
@@ -179,7 +179,7 @@ class Creature:
         beat_prev = (beat + self.sim.beats_per_cycle - 1) % self.sim.beats_per_cycle
         prog = self.sim.frame_to_beat_fade(frame)
 
-        location_idx = x * self.sim.CH + y
+        location_idx = x * self.sim.creature_height + y
         dna_idx = (
             location_idx * self.sim.beats_per_cycle + beat
         ) * self.sim.traits_per_box
@@ -197,10 +197,7 @@ class Creature:
 
         if self.codon_with_change is not None:
             next_green = 0.0
-            if (
-                self.codon_with_change >= dna_idx
-                and self.codon_with_change < dna_idx + self.sim.traits_per_box
-            ):
+            if dna_idx <= self.codon_with_change < dna_idx + self.sim.traits_per_box:
                 next_green = 1.0
             previous_green = 0.0
             if (

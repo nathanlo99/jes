@@ -29,15 +29,15 @@ class UI:
         self,
         window_width,
         window_height,
-        _movie_single_dimension,
-        _graph_coor,
-        _sac_coor,
-        _geneology_coor,
-        _column_margin,
-        _mosaic_dim,
-        _menu_text_up,
-        _cm_margin1,
-        _cm_margin2,
+        movie_single_dimension,
+        graph_coords,
+        label_coords,
+        ancestry_tree_coords,
+        column_margin,
+        mosaic_dim,
+        menu_text_up,
+        cm_margin1,
+        cm_margin2,
     ):
         self.slider_list = []
         self.button_list = []
@@ -49,24 +49,24 @@ class UI:
         self.background_pic = pygame.image.load("visuals/background.png")
         self.window_width = window_width
         self.window_height = window_height
-        self.movie_single_dimension = _movie_single_dimension
+        self.movie_single_dimension = movie_single_dimension
         self.info_width = self.movie_single_dimension[0]
 
-        self.graph_coords = _graph_coor
+        self.graph_coords = graph_coords
         self.graph = pygame.Surface(self.graph_coords[2:4], pygame.SRCALPHA, 32)
-        self.sac_coords = _sac_coor
-        self.labels = pygame.Surface(self.sac_coords[2:4], pygame.SRCALPHA, 32)
-        self.geneology_coords = _geneology_coor
+        self.label_coords = label_coords
+        self.labels = pygame.Surface(self.label_coords[2:4], pygame.SRCALPHA, 32)
+        self.ancestry_tree_coords = ancestry_tree_coords
         self.gene_graph = pygame.Surface(
-            self.geneology_coords[2:4], pygame.SRCALPHA, 32
+            self.ancestry_tree_coords[2:4], pygame.SRCALPHA, 32
         )
 
-        self.column_margin = _column_margin
-        self.mosaic_dim = _mosaic_dim
-        self.menu_text_up = _menu_text_up
+        self.column_margin = column_margin
+        self.mosaic_dim = mosaic_dim
+        self.menu_text_up = menu_text_up
 
-        self.cm_margin1 = _cm_margin1
-        self.cm_margin2 = _cm_margin2
+        self.cm_margin1 = cm_margin1
+        self.cm_margin2 = cm_margin2
         self.mosaic_width = self.window_width - self.cm_margin1 * 2
         self.mosaic_width_creatures = (
             self.mosaic_width - self.info_width - self.column_margin
@@ -109,9 +109,8 @@ class UI:
             [570, 625, 250, 250],
         ]
         self.salt = str(random.uniform(0, 1))
-        self.overridden_colors = (
-            {}
-        )  # special-case colors: species colored by the user, not RNG
+        # special-case colors: species colored by the user, not RNG
+        self.overridden_colors = {}
 
         # variables for the "Watch sample" button
         self.sample_frames = 0
@@ -235,11 +234,11 @@ class UI:
                     new_clh = [1, index, r]
 
             # rolling mouse over species circles
-            rolling_x = mouse_x - self.geneology_coords[0]
-            rolling_y = mouse_y - self.geneology_coords[1]
+            rolling_x = mouse_x - self.ancestry_tree_coords[0]
+            rolling_y = mouse_y - self.ancestry_tree_coords[1]
             if (
-                0 <= rolling_x < self.geneology_coords[2]
-                and 0 <= rolling_y < self.geneology_coords[3]
+                0 <= rolling_x < self.ancestry_tree_coords[2]
+                and 0 <= rolling_y < self.ancestry_tree_coords[3]
             ):
                 answer = self.get_rollover(rolling_x, rolling_y)
                 if answer is not None:
@@ -251,7 +250,7 @@ class UI:
                 and get_distance(
                     mouse_x, mouse_y, self.storage_coor[0], self.storage_coor[1]
                 )
-                <= self.geneology_coords[4]
+                <= self.ancestry_tree_coords[4]
             ):
                 new_clh = [2, self.species_storage]
 
@@ -294,7 +293,10 @@ class UI:
             for i in range(len(ps[level])):
                 s = ps[level][i]
                 sX, sY = self.sim.species_info[s].coords
-                if get_distance(mouse_x, mouse_y, sX, sY) <= self.geneology_coords[4]:
+                if (
+                    get_distance(mouse_x, mouse_y, sX, sY)
+                    <= self.ancestry_tree_coords[4]
+                ):
                     answer = s
         return answer
 
@@ -312,24 +314,24 @@ class UI:
             y = i // mosaic_dimension
             creature = self.sim.creatures[gen][c]
             spacing = self.mosaic_width_creatures / mosaic_dimension
-            creature.icon_coor = (
+            creature.icon_coords = (
                 x * spacing + self.cm_margin2,
                 y * spacing + self.cm_margin2,
                 spacing,
                 spacing,
             )
-            if creature.icon_coor[1] < self.mosaic_screen.get_height():
+            if creature.icon_coords[1] < self.mosaic_screen.get_height():
                 s = self.style_button.setting
                 if s <= 1:
-                    self.mosaic_screen.blit(creature.icons[s], creature.icon_coor)
+                    self.mosaic_screen.blit(creature.icons[s], creature.icon_coords)
                 elif s == 2:
                     extra = 1
                     pygame.draw.rect(
                         self.mosaic_screen,
                         species_to_color(creature.species, self),
                         (
-                            creature.icon_coor[0],
-                            creature.icon_coor[1],
+                            creature.icon_coords[0],
+                            creature.icon_coords[1],
                             spacing + extra,
                             spacing + extra,
                         ),
@@ -337,7 +339,7 @@ class UI:
                 if not creature.living and self.show_xs:
                     color = (255, 0, 0) if s <= 1 else (0, 0, 0)
                     draw_x(
-                        creature.icon_coor,
+                        creature.icon_coords,
                         self.icon_dimension[s][0],
                         color,
                         self.mosaic_screen,
@@ -490,7 +492,7 @@ class UI:
         self.screen.blit(generation_surface, (40, y))
         if self.species_storage is not None:
             s = self.species_storage
-            radius = self.geneology_coords[4]
+            radius = self.ancestry_tree_coords[4]
             draw_species_circle(
                 self.screen,
                 s,
@@ -564,7 +566,7 @@ class UI:
             self.movie_screens[i] = pygame.Surface(DIM, pygame.SRCALPHA, 32)
 
             node_array, _, current_frame = self.visual_sim_memory[i]
-            s = DIM[0] / (self.sim.CW + 2) * 0.5  # visual transform scale
+            s = DIM[0] / (self.sim.creature_width + 2) * 0.5  # visual transform scale
 
             average_x = np.mean(node_array[:, :, :, 0])
             transform = [DIM[0] / 2 - average_x * s, DIM[1] * 0.8, s]
@@ -703,7 +705,7 @@ class UI:
                 (dimensions[0], dimensions[1]),
             )
         else:
-            coords = self.sim.creatures[gen][self.clh[1]].icon_coor
+            coords = self.sim.creatures[gen][self.clh[1]].icon_coords
             x = coords[0] + self.cm_margin1
             y = coords[1] + self.cm_margin1
             self.screen.blit(draw_ring_light(coords[2], coords[3], 6), (x, y))

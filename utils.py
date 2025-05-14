@@ -142,11 +142,15 @@ def get_distance_array(a, b):
     return np.sqrt(np.square(x_dist) + np.square(y_dist))
 
 
-def apply_muscles(n, m, muscle_coef):
-    xNeighborDists = get_distance_array(n[:, :-1, :], n[:, 1:, :])
-    yNeighborDists = get_distance_array(n[:, :, :-1], n[:, :, 1:])
-    posDiagNeighborDists = get_distance_array(n[:, :-1, :-1], n[:, 1:, 1:])
-    negDiagNeighborDists = get_distance_array(n[:, :-1, 1:], n[:, 1:, :-1])
+def apply_muscles(n, m, muscle_spring_constant):
+    x_neighbor_distances = get_distance_array(n[:, :-1, :], n[:, 1:, :])
+    y_neighbour_distances = get_distance_array(n[:, :, :-1], n[:, :, 1:])
+    positive_diagonal_neighbor_distances = get_distance_array(
+        n[:, :-1, :-1], n[:, 1:, 1:]
+    )
+    negative_diagonal_neighbor_distances = get_distance_array(
+        n[:, :-1, 1:], n[:, 1:, :-1]
+    )
 
     muscle_attractions = [None] * 6
     segments = [
@@ -158,40 +162,42 @@ def apply_muscles(n, m, muscle_coef):
         [0, 1, 1, 0],
     ]
 
-    muscle_attractions[0] = get_muscle_attraction(
-        xNeighborDists[:, :, :-1], m[:, :, :, 0], muscle_coef
-    )
-    muscle_attractions[1] = get_muscle_attraction(
-        xNeighborDists[:, :, 1:], m[:, :, :, 0], muscle_coef
-    )
-    muscle_attractions[2] = get_muscle_attraction(
-        yNeighborDists[:, :-1, :], m[:, :, :, 1], muscle_coef
-    )
-    muscle_attractions[3] = get_muscle_attraction(
-        yNeighborDists[:, 1:, :], m[:, :, :, 1], muscle_coef
-    )
-    muscle_attractions[4] = get_muscle_attraction(
-        posDiagNeighborDists, m[:, :, :, 3], muscle_coef
-    )
-    muscle_attractions[5] = get_muscle_attraction(
-        negDiagNeighborDists, m[:, :, :, 3], muscle_coef
-    )
+    muscle_attractions = [
+        get_muscle_attraction(
+            x_neighbor_distances[:, :, :-1], m[:, :, :, 0], muscle_spring_constant
+        ),
+        get_muscle_attraction(
+            x_neighbor_distances[:, :, 1:], m[:, :, :, 0], muscle_spring_constant
+        ),
+        get_muscle_attraction(
+            y_neighbour_distances[:, :-1, :], m[:, :, :, 1], muscle_spring_constant
+        ),
+        get_muscle_attraction(
+            y_neighbour_distances[:, 1:, :], m[:, :, :, 1], muscle_spring_constant
+        ),
+        get_muscle_attraction(
+            positive_diagonal_neighbor_distances, m[:, :, :, 3], muscle_spring_constant
+        ),
+        get_muscle_attraction(
+            negative_diagonal_neighbor_distances, m[:, :, :, 3], muscle_spring_constant
+        ),
+    ]
 
     # The array n is a 100 x 5 x 5 x 4 dimensional array,
     # and it encodes the position and velocity data for all 100 creatures on a frame.
 
     # Dimension 1: 100 creatures (creature ID)
-    # Dimension 2: 5 nodes across the x-dimensional
-    # Dimension 3: 5 nodes across the y-dimensional
+    # Dimension 2: 5 nodes across the x-dimension
+    # Dimension 3: 5 nodes across the y-dimension
     # Dimension 4: Which coordinate to do you want (x, y, vx, vy)
-    _, CW, CH, __ = n.shape
-    CW -= 1
-    CH -= 1
+    _, creature_width, creature_height, _ = n.shape
+    creature_width -= 1
+    creature_height -= 1
 
-    for dire in range(6):
-        s = segments[dire]
-        sli1 = n[:, s[0] : s[0] + CW, s[1] : s[1] + CW]
-        sli2 = n[:, s[2] : s[2] + CH, s[3] : s[3] + CH]
+    for direction in range(6):
+        s = segments[direction]
+        sli1 = n[:, s[0] : s[0] + creature_width, s[1] : s[1] + creature_width]
+        sli2 = n[:, s[2] : s[2] + creature_height, s[3] : s[3] + creature_height]
 
         delta_x = sli1[:, :, :, 0] - sli2[:, :, :, 0]
         delta_y = sli1[:, :, :, 1] - sli2[:, :, :, 1]
@@ -200,22 +206,22 @@ def apply_muscles(n, m, muscle_coef):
         delta_nx = delta_x / delta_magnitude
         delta_ny = delta_y / delta_magnitude
 
-        n[:, s[0] : s[0] + CW, s[1] : s[1] + CW, 2] += (
-            delta_nx * muscle_attractions[dire]
+        n[:, s[0] : s[0] + creature_width, s[1] : s[1] + creature_width, 2] += (
+            delta_nx * muscle_attractions[direction]
         )
-        n[:, s[0] : s[0] + CW, s[1] : s[1] + CW, 3] += (
-            delta_ny * muscle_attractions[dire]
+        n[:, s[0] : s[0] + creature_width, s[1] : s[1] + creature_width, 3] += (
+            delta_ny * muscle_attractions[direction]
         )
-        n[:, s[2] : s[2] + CH, s[3] : s[3] + CH, 2] -= (
-            delta_nx * muscle_attractions[dire]
+        n[:, s[2] : s[2] + creature_height, s[3] : s[3] + creature_height, 2] -= (
+            delta_nx * muscle_attractions[direction]
         )
-        n[:, s[2] : s[2] + CH, s[3] : s[3] + CH, 3] -= (
-            delta_ny * muscle_attractions[dire]
+        n[:, s[2] : s[2] + creature_height, s[3] : s[3] + creature_height, 3] -= (
+            delta_ny * muscle_attractions[direction]
         )
 
 
-def get_muscle_attraction(dists, m, muscle_coef):
-    return (m - dists) * muscle_coef
+def get_muscle_attraction(dists, m, muscle_spring_constant):
+    return (m - dists) * muscle_spring_constant
 
 
 def get_distance(x1, y1, x2, y2):

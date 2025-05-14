@@ -11,52 +11,56 @@ from jes_dataviz import draw_all_graphs
 class Simulation:
     def __init__(
         self,
+        *,
         creature_count,
-        _stabilization_time,
-        _trial_time,
-        _beat_time,
-        _beat_fade_time,
-        _c_dim,
-        _beats_per_cycle,
-        _node_coor_count,
-        _y_clips,
-        _ground_friction_coef,
-        _gravity_acceleration_coef,
-        _calming_friction_coef,
-        _typical_friction_coef,
-        _muscle_coef,
-        _traits_per_box,
-        _traits_extra,
-        _mutation_rate,
-        _big_mutation_rate,
-        _units_per_meter,
+        stabilization_time,
+        trial_time,
+        beat_time,
+        beat_fade_time,
+        creature_dimensions,
+        beats_per_cycle,
+        node_coord_size,
+        y_clips,
+        ground_friction_coefficient,
+        gravity_acceleration_coeff,
+        calming_friction_coeff,
+        typical_friction_coeff,
+        muscle_coeff,
+        traits_per_box,
+        traits_extra,
+        mutation_rate,
+        big_mutation_rate,
+        units_per_meter,
     ):
         self.creature_count = creature_count
         self.species_count = creature_count
-        self.stabilization_time = _stabilization_time
-        self.trial_time = _trial_time
-        self.beat_time = _beat_time
-        self.beat_fade_time = _beat_fade_time
-        self.c_dim = _c_dim
-        self.CW, self.CH = self.c_dim
-        self.beats_per_cycle = _beats_per_cycle
-        self.node_coor_count = _node_coor_count
-        self.y_clips = _y_clips
-        self.ground_friction_coef = _ground_friction_coef
-        self.gravity_acceleration_coef = _gravity_acceleration_coef
-        self.calming_friction_coef = _calming_friction_coef
-        self.typical_friction_coef = _typical_friction_coef
-        self.muscle_coef = _muscle_coef
+        self.stabilization_time = stabilization_time
+        self.trial_time = trial_time
+        self.beat_time = beat_time
+        self.beat_fade_time = beat_fade_time
+        self.creature_dimensions = creature_dimensions
+        self.creature_width, self.creature_height = self.creature_dimensions
+        self.beats_per_cycle = beats_per_cycle
+        self.node_coord_size = node_coord_size
+        self.y_clips = y_clips
+        self.ground_friction_coef = ground_friction_coefficient
+        self.gravity_acceleration_coef = gravity_acceleration_coeff
+        self.calming_friction_coef = calming_friction_coeff
+        self.typical_friction_coef = typical_friction_coeff
+        self.muscle_coef = muscle_coeff
 
-        self.traits_per_box = _traits_per_box
-        self.traits_extra = _traits_extra
+        self.traits_per_box = traits_per_box
+        self.traits_extra = traits_extra
         self.trait_count = (
-            self.CW * self.CH * self.beats_per_cycle * self.traits_per_box
+            self.creature_width
+            * self.creature_height
+            * self.beats_per_cycle
+            * self.traits_per_box
             + self.traits_extra
         )
 
-        self.mutation_rate = _mutation_rate
-        self.big_mutation_rate = _big_mutation_rate
+        self.mutation_rate = mutation_rate
+        self.big_mutation_rate = big_mutation_rate
 
         # what proportion of the population does a species need to get a label?
         self.s_visible = 0.05
@@ -64,7 +68,7 @@ class Simulation:
         self.s_notable = 0.10
         # change this if you want to change the resolution of the percentile-tracking
         self.percentile_base = 100
-        self.units_per_meter = _units_per_meter
+        self.units_per_meter = units_per_meter
         self.creatures = None
         self.rankings = np.zeros((0, self.creature_count), dtype=int)
         self.percentiles = np.zeros((0, self.percentile_base + 1))
@@ -106,10 +110,19 @@ class Simulation:
 
     def get_starting_node_coords(self, gen, start_idx, end_idx, from_calm_state):
         count = end_idx - start_idx
-        node_coords = np.zeros((count, self.CH + 1, self.CW + 1, self.node_coor_count))
+        node_coords = np.zeros(
+            (
+                count,
+                self.creature_height + 1,
+                self.creature_width + 1,
+                self.node_coord_size,
+            )
+        )
         if not from_calm_state or self.creatures[gen][0].calm_state is None:
             # create grid of nodes along perfect gridlines
-            coordinate_grid = np.mgrid[0 : self.CW + 1, 0 : self.CH + 1]
+            coordinate_grid = np.mgrid[
+                0 : self.creature_width + 1, 0 : self.creature_height + 1
+            ]
             coordinate_grid = np.swapaxes(np.swapaxes(coordinate_grid, 0, 1), 1, 2)
             node_coords[:, :, :, 0:2] = coordinate_grid
         else:
@@ -117,28 +130,44 @@ class Simulation:
             for c in range(start_idx, end_idx):
                 node_coords[c - start_idx, :, :, :] = self.creatures[gen][c].calm_state
                 # lift the creature above ground level
-                node_coords[c - start_idx, :, :, 1] -= self.CH
+                node_coords[c - start_idx, :, :, 1] -= self.creature_height
         return node_coords
 
     def get_muscle_array(self, gen, start_idx, end_idx):
         count = end_idx - start_idx
         # Add one trait for diagonal length.
-        m = np.zeros(
-            (count, self.CH, self.CW, self.beats_per_cycle, self.traits_per_box + 1)
+        muscles = np.zeros(
+            (
+                count,
+                self.creature_height,
+                self.creature_width,
+                self.beats_per_cycle,
+                self.traits_per_box + 1,
+            )
         )
-        dna_length = self.CH * self.CW * self.beats_per_cycle * self.traits_per_box
+        dna_length = (
+            self.creature_height
+            * self.creature_width
+            * self.beats_per_cycle
+            * self.traits_per_box
+        )
         for c in range(start_idx, end_idx):
             dna = (
                 self.creatures[gen][c]
                 .dna[0:dna_length]
-                .reshape(self.CH, self.CW, self.beats_per_cycle, self.traits_per_box)
+                .reshape(
+                    self.creature_height,
+                    self.creature_width,
+                    self.beats_per_cycle,
+                    self.traits_per_box,
+                )
             )
-            m[c - start_idx, :, :, :, : self.traits_per_box] = 1.0 + (dna) / 3.0
+            muscles[c - start_idx, :, :, :, : self.traits_per_box] = 1.0 + dna / 3.0
         # Set diagonal tendons
-        m[:, :, :, :, 3] = np.sqrt(
-            np.square(m[:, :, :, :, 0]) + np.square(m[:, :, :, :, 1])
+        muscles[:, :, :, :, 3] = np.sqrt(
+            np.square(muscles[:, :, :, :, 0]) + np.square(muscles[:, :, :, :, 1])
         )
-        return m
+        return muscles
 
     def simulate_import(self, gen, start_idx, end_idx, from_calm_state):
         node_coords = self.get_starting_node_coords(
@@ -325,9 +354,9 @@ class Simulation:
         return Creature(parent.dna, new_id, parent.species, self, self.ui)
 
     def mutate(self, parent, new_id):
-        new_dna, new_species, cwc = parent.get_mutated_dna(self)
+        new_dna, new_species, creature_widthc = parent.get_mutated_dna(self)
         new_creature = Creature(new_dna, new_id, new_species, self, self.ui)
         if new_creature.species != parent.species:
             self.species_info.append(SpeciesInfo(self, new_creature, parent))
-            new_creature.codon_with_change = cwc
+            new_creature.codon_with_change = creature_widthc
         return new_creature

@@ -149,13 +149,17 @@ def get_range_even_if_none(dicty, key):
 
 
 # TODO bruh naming
-def trapezoid_helper(sac, data, g1, g2, x1, x2, pixels_per_creature, level, ui):
+def trapezoid_helper(
+    label_surface, data, g1, g2, x1, x2, pixels_per_creature, level, ui
+):
     pop2 = [0, 0, 0]
-    h = sac.get_height()
+    h = label_surface.get_height()
     for sp in data[g1].keys():
         pop1 = data[g1][sp]
         if level == 0 and pop1[1] != pop2[2]:  # there was a gap
-            trapezoid_helper(sac, data, g2, g1, x2, x1, pixels_per_creature, 1, ui)
+            trapezoid_helper(
+                label_surface, data, g2, g1, x2, x1, pixels_per_creature, 1, ui
+            )
         pop2 = get_range_even_if_none(data[g2], sp)
         points = [
             [x1, h - pop2[1] * pixels_per_creature],
@@ -163,11 +167,11 @@ def trapezoid_helper(sac, data, g1, g2, x1, x2, pixels_per_creature, level, ui):
             [x2, h - pop1[2] * pixels_per_creature],
             [x2, h - pop1[1] * pixels_per_creature],
         ]
-        pygame.draw.polygon(sac, species_to_color(sp, ui), points)
+        pygame.draw.polygon(label_surface, species_to_color(sp, ui), points)
 
 
 def draw_gene_graph(species_info, prominent_species, gene_graph, sim, ui, font):
-    r = ui.geneology_coords[4]
+    r = ui.ancestry_tree_coords[4]
     h = gene_graph.get_height() - r * 2
     w = gene_graph.get_width() - r * 2
     gene_graph.fill((0, 0, 0))
@@ -215,7 +219,7 @@ def display_all_graphs(screen, sim, ui):
 
 def blit_graphs_and_marks(screen, sim, ui):
     screen.blit(ui.graph, ui.graph_coords[0:2])
-    screen.blit(ui.labels, ui.sac_coords[0:2])
+    screen.blit(ui.labels, ui.label_coords[0:2])
     green = (0, 255, 0)
     white = (255, 255, 255)
     a = int(ui.generation_slider.val)
@@ -226,7 +230,7 @@ def blit_graphs_and_marks(screen, sim, ui):
 
     if a < b:
         frac = (a + 1) / b
-        line_x = ui.sac_coords[0] + 70 + (ui.graph.get_width() - 70) * frac
+        line_x = ui.label_coords[0] + 70 + (ui.graph.get_width() - 70) * frac
         line_ys = [[50, 550], [560, 860]]
         for line_y in line_ys:
             pygame.draw.line(
@@ -234,7 +238,7 @@ def blit_graphs_and_marks(screen, sim, ui):
             )
 
     frac = (a2 + 1) / b
-    line_x = ui.sac_coords[0] + 70 + (ui.graph.get_width() - 70) * frac
+    line_x = ui.label_coords[0] + 70 + (ui.graph.get_width() - 70) * frac
     median = sim.percentiles[a2][50]
     right_text(
         screen,
@@ -267,7 +271,7 @@ def blit_graphs_and_marks(screen, sim, ui):
 
 
 def blit_gene_graph_and_marks(screen, sim, ui):
-    screen.blit(ui.gene_graph, ui.geneology_coords[0:2])
+    screen.blit(ui.gene_graph, ui.ancestry_tree_coords[0:2])
     radius = 42
     a = int(ui.generation_slider.val)
     b = int(ui.generation_slider.val_max)
@@ -281,8 +285,8 @@ def blit_gene_graph_and_marks(screen, sim, ui):
         if not info.prominent:
             continue
         circle_count = 2 if sp == top_species else 1
-        cx = info.coords[0] + ui.geneology_coords[0]
-        cy = info.coords[1] + ui.geneology_coords[1]
+        cx = info.coords[0] + ui.ancestry_tree_coords[0]
+        cy = info.coords[1] + ui.ancestry_tree_coords[1]
         for c in range(circle_count):
             pygame.draw.circle(screen, ui.white, (cx, cy), radius + 3 + 6 * c, 3)
 

@@ -45,7 +45,7 @@ def draw_ring_light(w, h, thickness):
     return ring_light
 
 
-def draw_x(icon_coor, I, color, screen):
+def draw_x(icon_coords, I, color, screen):
     for part_num in range(2):
         i1 = I * 0.02
         i2 = I * 0.06 + 3
@@ -53,8 +53,8 @@ def draw_x(icon_coor, I, color, screen):
         for point in points:
             if part_num == 1:
                 point[0] = I - point[0]
-            point[0] += icon_coor[0]
-            point[1] += icon_coor[1]
+            point[0] += icon_coords[0]
+            point[1] += icon_coords[1]
         pygame.draw.polygon(screen, color, points)
 
 
