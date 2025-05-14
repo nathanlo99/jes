@@ -159,7 +159,7 @@ def draw_species_circle(
     screen.blit(tiny_icon, (cx - 25, cy - 11))
 
     if should_draw_arrow:
-        ancestor_id = species_info[s].ancestor_id
+        ancestor_id = species_info[s].parent_species
         if ancestor_id is None:
             draw_arrow(screen, (cx, -radius * 2), (cx, cy), radius, radius / 2, color)
         else:

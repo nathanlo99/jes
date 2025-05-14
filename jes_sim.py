@@ -92,7 +92,7 @@ class Simulation:
                     self.ui.icon_dimension[i], self.ui.mosaic_color, self.beat_fade_time
                 )
 
-        self.ui.drawCreatureMosaic(0)
+        self.ui.draw_creature_mosaic(0)
 
     def create_new_creature(self, id):
         dna = np.clip(np.random.normal(0.0, 1.0, self.trait_count), -3, 3)
@@ -220,7 +220,7 @@ class Simulation:
 
             # prominent threshold
             if pop >= self.creature_count * self.s_notable and not info.prominent:
-                info.becomeProminent()
+                info.become_prominent()
 
     def check_alap(self):
         if self.ui.alap_button.setting == 1:  # We're already ALAP-ing!
@@ -311,7 +311,7 @@ class Simulation:
                 )
 
         self.ui.generation_slider.val_max = gen + 1
-        self.ui.generation_slider.manualUpdate(gen)
+        self.ui.generation_slider.manual_update(gen)
         self.last_gen_run_time = time.monotonic() - generation_start_time
 
         self.ui.detect_mouse_motion()

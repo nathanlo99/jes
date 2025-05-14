@@ -115,8 +115,8 @@ def brighten(color, b):
 
 def species_to_color(s, ui):
     salted = str(s) + ui.salt
-    if s in ui.sc_colors:
-        salted = ui.sc_colors[s] + ui.salt
+    if s in ui.overridden_colors:
+        salted = ui.overridden_colors[s] + ui.salt
     _hex = sha256(salted.encode("utf-8")).hexdigest()
     hue = (int(_hex, 16) % 10000) / 10000
     brightness = (math.floor(int(_hex, 16) // 10000) % 100) / 100
@@ -210,7 +210,7 @@ def getMuscleAttraction(dists, m, muscle_coef):
     return (m - dists) * muscle_coef
 
 
-def getDist(x1, y1, x2, y2):
+def get_distance(x1, y1, x2, y2):
     return np.linalg.norm(np.array([x2 - x1, y2 - y1]))
 
 
